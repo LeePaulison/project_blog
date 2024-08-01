@@ -44,12 +44,27 @@ const typeDefs = `#graphql
     user(id: ID!): User
     users: [User]
   }
+
+  type Mutation {
+    addUser(userName: String!, email: String!): User
+  }
 `;
 
 const resolvers = {
   Query: {
     users: () => mockUsers,
     user: (_, { id }) => mockUsers.find((user) => user.id === id),
+  },
+  Mutation: {
+    addUser: (_, { userName, email }) => {
+      const newUser = {
+        id: String(mockUsers.length + 1),
+        userName,
+        email,
+      };
+      mockUsers.push(newUser);
+      return newUser;
+    },
   },
 };
 
