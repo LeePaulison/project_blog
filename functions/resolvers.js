@@ -1,42 +1,36 @@
 import { mockUsers } from "./mocks.js";
 import { db } from "./db.js";
-import { addDoc, collection, setLogLevel } from "firebase/firestore";
+import { getDocs, addDoc, collection } from "firebase/firestore";
 
 const userCollection = collection(db, "users");
 
-try {
-  const docRef = await addDoc(userCollection, {
-    userName: "Ada",
-    email: "ada.doe@example.com",
-  });
-
-  console.log("Document written with ID: ", docRef.id);
-} catch (e) {
-  console.error("Error adding document: ", e);
-}
-
-setLogLevel("debug");
-
-try {
-  console.log("Getting documents...");
-  console.log(userCollection);
-} catch (e) {
-  console.error("Error getting collection: ", e);
-}
-
 export const resolvers = {
   Query: {
-    users: () => mockUsers,
+    users: async () => {
+      const querySnapshot = await getDocs(userCollection);
+
+      const users = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      return users;
+    },
     user: (_, { id }) => mockUsers.find((user) => user.id === id),
   },
   Mutation: {
-    addUser: (_, { userName, email }) => {
+    addUser: async (_, { userName, email }) => {
+      const docRef = await addDoc(userCollection, {
+        userName,
+        email,
+      });
+
       const newUser = {
-        id: String(mockUsers.length + 1),
+        id: docRef.id,
         userName,
         email,
       };
-      mockUsers.push(newUser);
+
       return newUser;
     },
   },
