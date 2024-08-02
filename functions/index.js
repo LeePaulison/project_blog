@@ -19,54 +19,8 @@
 // });
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-
-const mockUsers = [
-  {
-    id: "1",
-    userName: "user1",
-    email: "jane.doe@example.com",
-  },
-  {
-    id: "2",
-    userName: "user2",
-    email: "john.doe@example.com",
-  },
-];
-
-const typeDefs = `#graphql
-  type User {
-    id: ID!
-    userName: String
-    email: String
-  }
-
-  type Query {
-    user(id: ID!): User
-    users: [User]
-  }
-
-  type Mutation {
-    addUser(userName: String!, email: String!): User
-  }
-`;
-
-const resolvers = {
-  Query: {
-    users: () => mockUsers,
-    user: (_, { id }) => mockUsers.find((user) => user.id === id),
-  },
-  Mutation: {
-    addUser: (_, { userName, email }) => {
-      const newUser = {
-        id: String(mockUsers.length + 1),
-        userName,
-        email,
-      };
-      mockUsers.push(newUser);
-      return newUser;
-    },
-  },
-};
+import { typeDefs } from "./typeDefs.js";
+import { resolvers } from "./resolvers.js";
 
 const server = new ApolloServer({
   typeDefs,
