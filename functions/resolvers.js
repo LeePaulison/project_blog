@@ -1,65 +1,63 @@
-import { db } from "./db.js";
-import { doc, getDoc, getDocs, addDoc, collection } from "firebase/firestore";
-
-import { mockUsers } from "./mocks.js";
-
-const userCollection = collection(db, "users");
+import { database } from "./db/db.js";
 
 export const resolvers = {
   Query: {
     users: async () => {
-      const querySnapshot = await getDocs(userCollection);
-
       let users = null;
+      try {
+        const usersCollection = database.collection("users");
 
-      if (querySnapshot) {
-        users = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      } else {
-        users = mockUsers;
+        if (usersCollection) {
+          const query = {};
+          const options = {};
+          users = await usersCollection.find(query, options).toArray();
+        }
+      } catch (error) {
+        console.error(`Error querying the database ${error}`);
       }
 
       return users;
     },
-    user: async (_, { id }) => {
+    user: async (_, { email, password }) => {
+      let user = null;
+
       try {
-        const docRef = doc(userCollection, id);
+        const usersCollection = database.collection("users");
 
-        let docSnap = null;
-
-        if (docSnap) {
-          docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            return {
-              id: docSnap.id,
-              ...docSnap.data(),
-            };
-          }
-        } else {
-          return mockUsers.find((item) => item.id === id);
+        if (usersCollection) {
+          const query = {
+            email: email,
+            password: password,
+          };
+          const options = {};
+          user = await usersCollection.findOne(query, options);
+          console.log(user);
         }
       } catch (error) {
-        console.error("Error getting document:", error);
+        console.error(`Error querying the database ${error}`);
       }
 
       return user;
     },
   },
   Mutation: {
-    addUser: async (_, { userName, email }) => {
-      const docRef = await addDoc(userCollection, {
-        userName,
-        email,
-      });
+    addUser: async (_, { userName, email, name, password }) => {
+      try {
+        const usersCollection = database.collection("users");
 
-      const newUser = {
-        id: docRef.id,
-        userName,
-        email,
-      };
+        if (usersCollection) {
+          const result = await usersCollection.insertOne({
+            email,
+            userName,
+            name,
+            password,
+          });
 
+          console.log(`addUser Result: ${result}`);
+        }
+      } catch (error) {
+        console.error(`Error adding new user: ${error}`);
+      }
       return newUser;
     },
   },
