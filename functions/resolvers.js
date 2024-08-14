@@ -31,7 +31,7 @@ export const resolvers = {
           };
           const options = {};
           user = await usersCollection.findOne(query, options);
-          console.log(user);
+          console.log(`User: ${JSON.stringify(user, null, 2)}`);
         }
       } catch (error) {
         console.error(`Error querying the database ${error}`);
@@ -66,6 +66,39 @@ export const resolvers = {
         console.error(`Error adding new user: ${error}`);
       }
       return newUser;
+    },
+    updateUser: async (_, { currentEmail, userName, email, name, password }) => {
+      let updatedUser = null;
+      try {
+        const usersCollection = database.collection("users");
+
+        console.log("currentEmail: ", currentEmail);
+
+        if (usersCollection) {
+          const query = { email: currentEmail };
+          const options = { returnDocument: "after" };
+          const currentUser = await usersCollection.findOne(query);
+          console.log(`currentUser: ${JSON.stringify(currentUser, null, 2)}`);
+          const update = {
+            $set: {
+              email: email || currentUser.email,
+              userName: userName || currentUser.userName,
+              name: name || currentUser.name,
+              password: password || currentUser.password,
+            },
+          };
+
+          updatedUser = await usersCollection.findOneAndUpdate(query, update, options);
+          if (updatedUser) {
+            console.log(`Updated user: ${JSON.stringify(updatedUser, null, 2)}`);
+          } else {
+            console.log(`User not found: ${currentEmail}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error updating user: ${error}`);
+      }
+      return updatedUser;
     },
   },
 };
