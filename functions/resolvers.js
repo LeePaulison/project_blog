@@ -2,7 +2,7 @@ import { database } from "./db/db.js";
 
 export const resolvers = {
   Query: {
-    users: async () => {
+    getUsers: async () => {
       let users = null;
       try {
         const usersCollection = database.collection("users");
@@ -18,7 +18,7 @@ export const resolvers = {
 
       return users;
     },
-    user: async (_, { email, password }) => {
+    getOneUser: async (_, { email, password }) => {
       let user = null;
 
       try {
@@ -61,7 +61,6 @@ export const resolvers = {
             name,
             password,
           };
-          console.log(`addUser Result: ${JSON.stringify(newUser)}`);
         }
       } catch (error) {
         console.error(`Error adding new user: ${error}`);
