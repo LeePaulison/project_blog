@@ -42,6 +42,7 @@ export const resolvers = {
   },
   Mutation: {
     addUser: async (_, { userName, email, name, password }) => {
+      let newUser;
       try {
         const usersCollection = database.collection("users");
 
@@ -53,7 +54,14 @@ export const resolvers = {
             password,
           });
 
-          console.log(`addUser Result: ${result}`);
+          newUser = {
+            _id: result.insertedId,
+            email,
+            userName,
+            name,
+            password,
+          };
+          console.log(`addUser Result: ${JSON.stringify(newUser)}`);
         }
       } catch (error) {
         console.error(`Error adding new user: ${error}`);
