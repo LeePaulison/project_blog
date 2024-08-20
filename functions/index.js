@@ -20,17 +20,35 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import "dotenv/config";
+import jwt from "jsonwebtoken";
+import cookie from "cookie";
 
 import { typeDefs } from "./typeDefs.js";
 import { resolvers } from "./resolvers.js";
 
+const context = async ({ req, res }) => {
+  const cookies = cookie.parse(req.headers.cookie || "");
+  const token = cookies.token || "";
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+    return { user, req, res };
+  } catch (error) {
+    console.error(`Error verifying token: ${error}`);
+  }
+};
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  context,
 });
 
 const { url } = await startStandaloneServer(server, {
   listen: { port: 4000 },
+  context: async ({ req, res }) => {
+    console.log("Request Headers", req.headers);
+  },
 });
 
 console.log(`🚀  Server ready at: ${url}`);

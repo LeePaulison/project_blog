@@ -1,4 +1,13 @@
 import { database } from "./db/db.js";
+import bcrypt from "bcryptjs";
+const saltRounds = process.env.SALT || 10;
+const hashKey = process.env.HASH_SECRET || "password";
+
+console.log(`Salt: ${parseInt(saltRounds)}`);
+console.log(`Hash Key: ${hashKey}`);
+
+const salt = bcrypt.genSaltSync(parseInt(saltRounds));
+const hash = bcrypt.hashSync(hashKey, salt);
 
 export const resolvers = {
   Query: {
@@ -18,26 +27,23 @@ export const resolvers = {
 
       return users;
     },
-    getOneUser: async (_, { email, password }) => {
-      let user = null;
-
+    me: async (_, __, { user }) => {
+      let me = null;
       try {
         const usersCollection = database.collection("users");
-
         if (usersCollection) {
           const query = {
-            email: email,
-            password: password,
+            id: user.id,
           };
           const options = {};
-          user = await usersCollection.findOne(query, options);
-          console.log(`User: ${JSON.stringify(user, null, 2)}`);
+          me = await usersCollection.findOne(query, options);
+          console.log(`User: ${JSON.stringify(me, null, 2)}`);
         }
       } catch (error) {
         console.error(`Error querying the database ${error}`);
       }
 
-      return user;
+      return me;
     },
   },
   Mutation: {
@@ -66,6 +72,52 @@ export const resolvers = {
         console.error(`Error adding new user: ${error}`);
       }
       return newUser;
+    },
+    login: async (_, { email, password }) => {
+      let user = null;
+      try {
+        const usersCollection = database.collection("users");
+
+        if (usersCollection) {
+          const query = {
+            email,
+            password: await bcrypt.hash(password, hash),
+          };
+          const options = {};
+          user = await usersCollection.findOne(query, options);
+          console.log(`User: ${JSON.stringify(user, null, 2)}`);
+        }
+      } catch (error) {
+        console.error(`Error querying the database ${error}`);
+      }
+
+      return user ? true : false;
+    },
+    signUp: async (_, { userName, email, name, password }) => {
+      let newUser;
+      try {
+        const usersCollection = database.collection("users");
+
+        if (usersCollection) {
+          const result = await usersCollection.insertOne({
+            email,
+            userName,
+            name,
+            password: await bcrypt.hash(password, hash),
+          });
+
+          newUser = {
+            _id: result.insertedId,
+            email,
+            userName,
+            name,
+            password,
+          };
+        }
+      } catch (error) {
+        console.error(`Error adding new user: ${error}`);
+      }
+      return newUser ? true : false;
     },
     updateUser: async (_, { currentEmail, userName, email, name, password }) => {
       let updatedUser = null;
