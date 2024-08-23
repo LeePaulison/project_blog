@@ -9,6 +9,17 @@ const jwt_hash = process.env.JWT_SECRET || "secret";
 const salt = bcrypt.genSaltSync(parseInt(saltRounds));
 const hash = bcrypt.hashSync(hashKey, salt);
 
+const createCookie = (user) => {
+  const token = jwt.sign({ userId: user._id }, jwt_hash, { expiresIn: "1h" });
+  const loginCookie = cookie.serialize("user", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 3600,
+  });
+  return loginCookie;
+};
+
 export const resolvers = {
   Query: {
     getUsers: async () => {
@@ -92,29 +103,20 @@ export const resolvers = {
         if (!user || user === null) {
           throw new Error("User not found");
         }
-        console.log(`User: ${JSON.stringify(user, null, 2)}`);
 
         const doPasswordsMatch = await bcrypt.compare(password, user.password);
         if (!doPasswordsMatch) {
           throw new Error("Passwords do not match");
         }
-        console.log(`Password match: ${doPasswordsMatch}`);
 
-        const token = jwt.sign(user, jwt_hash, { expiresIn: "1h" });
-        const loginCookie = cookie.serialize("token", token, {
-          httpOnly: false,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-          maxAge: 3600,
-        });
-        res.setHeader("Set-Cookie", loginCookie);
+        res.setHeader("Set-Cookie", createCookie({ _id: user._id }));
       } catch (error) {
         console.error(`Error querying the database ${error}`);
       }
 
       return user ? true : false;
     },
-    signUp: async (_, { userName, email, name, password }) => {
+    signUp: async (_, { userName, email, name, password }, { res }) => {
       let newUser;
       try {
         const usersCollection = database.collection("users");
@@ -136,16 +138,14 @@ export const resolvers = {
 
           newUser = {
             _id: result.insertedId,
-            email,
-            userName,
-            name,
-            password: encryptedPassword,
           };
+
+          res.setHeader("Set-Cookie", createCookie({ _id: newUser._id }));
         }
       } catch (error) {
         console.error(`Error adding new user: ${error}`);
       }
-      return newUser ? true : false;
+      return newUser._id ? true : false;
     },
     updateUser: async (_, { currentEmail, userName, email, name, password }) => {
       let updatedUser = null;
