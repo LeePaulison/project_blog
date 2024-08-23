@@ -32,6 +32,7 @@ const context = async ({ req, res }) => {
 
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("user", user);
     return { user, req, res };
   } catch (error) {
     console.error(`Error verifying token: ${error}`);
@@ -47,6 +48,28 @@ const server = new ApolloServer({
 const { url } = await startStandaloneServer(server, {
   listen: { port: 4000 },
   context: async ({ req, res }) => {
+    try {
+      const cookies = cookie.parse(req.headers.cookie || "");
+      const userToken = cookies.user || "";
+
+      if (!userToken) {
+        consolewarn("No user token found");
+        return { req, res };
+      }
+      const decodedToken = jwt.verify(userToken, process.env.JWT_SECRET);
+      const userId = decodedToken.userId;
+
+      return { userId, req, res };
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        console.error("Token expired");
+      } else if (error.name === "JsonWebTokenError") {
+        console.error("Invalid token");
+      } else {
+        console.error(`Error verifying token: ${error.message}`);
+      }
+    }
+
     return { req, res };
   },
 });

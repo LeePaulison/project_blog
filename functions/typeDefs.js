@@ -9,6 +9,7 @@ export const typeDefs = `#graphql
 
   type Query {
     me: User
+    getUser(userId: ID!): User
     getUsers: [User]
   }
 
@@ -17,6 +18,8 @@ export const typeDefs = `#graphql
     login(email: String!, password: String!): Boolean
     signUp(userName: String!, email: String!, name: String!, password: String!): Boolean
     signOut: Boolean
-    updateUser(currentEmail: String!, userName: String, email: String, name: String, password: String): User
+    updateUser(userName: String, email: String, name: String, password: String): User
+    deleteUser(userId: ID!): Boolean
+    deleteMe: Boolean
   }
 `;
