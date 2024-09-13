@@ -1,7 +1,9 @@
 import { database } from "./db/db.js";
 
 import { UserService } from "./services/userService.js";
+import { PermissionsService } from "./services/permissionsService.js";
 const userService = new UserService(database);
+const permissionsService = new PermissionsService(database);
 
 export const resolvers = {
   Query: {
@@ -13,6 +15,12 @@ export const resolvers = {
     },
     me: async (_, __, { userId }) => {
       return await userService.me(userId);
+    },
+    getPermissionsByUserId: async (_, { userId }) => {
+      return await permissionsService.getPermissionsByUserId(userId);
+    },
+    getPermissions: async () => {
+      return await permissionsService.getPermissions();
     },
   },
   Mutation: {
@@ -31,7 +39,10 @@ export const resolvers = {
       res.setHeader("Set-Cookie", userCookie);
       return userId ? true : false;
     },
-    updateUser: async (_, { userName, email, name, password }, { userId }) => {
+    updateUser: async (_, { userId, userName, email, name, password }) => {
+      return await userService.updateUser(userId, userName, email, name, password);
+    },
+    updateMe: async (_, { userName, email, name, password }, { userId }) => {
       return await userService.updateUser(userId, userName, email, name, password);
     },
     deleteUser: async (_, { userId }) => {
