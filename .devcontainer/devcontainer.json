@@ -1,0 +1,21 @@
+{
+  "name": "Professional Blog Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "client",  // You can switch between "client" or "server" as needed
+  "workspaceFolder": "/usr/src/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "/bin/sh"
+      }
+    }
+  },
+  "shutdownAction": "stopCompose",
+  "mounts": [
+  "source=g:/Development_Repos/Personal/project_blog,target=/workspace,type=bind,consistency=cached"
+]
+}

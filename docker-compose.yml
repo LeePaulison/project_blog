@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules # Prevents node_modules from being overwritten by the local system
+    ports:
+      - "5173:5173" # Map Vite's default port (5173) to the host
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Necessary for hot-reloading in Docker
+    command: ["yarn", "dev", "--host"] # Runs `yarn dev` to serve the React app
+    depends_on:
+      - server # Ensures server starts before client
+    networks:
+      - blog-network
+
+  server:
+    build:
+      context: ./functions
+      dockerfile: Dockerfile
+    volumes:
+      - ./functions:/usr/src/app
+      - /usr/src/app/node_modules # Avoids overwriting node_modules
+    ports:
+      - "4000:4000" # Exposes Apollo Server on port 4000
+    environment:
+      - NODE_ENV=development # Development environment
+    command: ["yarn", "start"] # Runs the standalone Apollo Server
+    networks:
+      - blog-network
+
+networks:
+  blog-network:
+    driver: bridge

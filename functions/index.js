@@ -52,25 +52,37 @@ const { url } = await startStandaloneServer(server, {
       const cookies = cookie.parse(req.headers.cookie || "");
       const userToken = cookies.user || "";
 
-      if (!userToken) {
-        consolewarn("No user token found");
-        return { req, res };
+      if (!userToken && !req.warnedTokenNotFound) {
+        console.warn("No user token found");
+        req.warnedTokenNotFound = true;
+        // Return a context indicating that no user is authenticated
+        return { req, res, isAuthenticated: false };
       }
+
+      // Verify the token
       const decodedToken = jwt.verify(userToken, process.env.JWT_SECRET);
       const userId = decodedToken.userId;
 
-      return { userId, req, res };
+      // If successful, return userId and mark the user as authenticated
+      return { userId, req, res, isAuthenticated: true };
     } catch (error) {
+      // Handle specific JWT errors
       if (error.name === "TokenExpiredError") {
         console.error("Token expired");
+        // Optionally, clear the cookie or return token-expired context
+        return { req, res, isAuthenticated: false, error: "TokenExpired" };
       } else if (error.name === "JsonWebTokenError") {
         console.error("Invalid token");
+        // Handle invalid token case
+        return { req, res, isAuthenticated: false, error: "InvalidToken" };
       } else {
+        // Catch any other error during verification
         console.error(`Error verifying token: ${error.message}`);
       }
-    }
 
-    return { req, res };
+      // Return a default context if there's an error
+      return { req, res, isAuthenticated: false, error: "TokenVerificationFailed" };
+    }
   },
 });
 

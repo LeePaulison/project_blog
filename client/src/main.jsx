@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 // pages
 import { About } from "./pages/about";
 // CSS
@@ -11,8 +11,10 @@ import "./assets/styles.css";
 import { RootLayout } from "./layouts/root";
 import { AppLayout } from "./layouts/app";
 
+console.log("Vite Server URL:", import.meta.env.VITE_SERVER_URL);
+
 const client = new ApolloClient({
-  uri: "http://localhost:4000",
+  uri: import.meta.env.VITE_SERVER_URL,
   cache: new InMemoryCache(),
 });
 
