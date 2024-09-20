@@ -1,8 +1,10 @@
 {
   "name": "Professional Blog Dev Container",
-  "dockerComposeFile": "docker-compose.yml",
-  "service": "client",  // You can switch between "client" or "server" as needed
-  "workspaceFolder": "/usr/src/app",
+  "dockerComposeFile": [
+    "docker-compose.yml"
+  ],
+  "service": "client",
+  "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -16,6 +18,7 @@
   },
   "shutdownAction": "stopCompose",
   "mounts": [
-  "source=g:/Development_Repos/Personal/project_blog,target=/workspace,type=bind,consistency=cached"
-]
+    "source=g:/Development_Repos/Personal/project_blog,target=/workspace,type=bind,consistency=cached"
+  ],
+"postCreateCommand": "apk update && apk add git && yarn install"
 }
